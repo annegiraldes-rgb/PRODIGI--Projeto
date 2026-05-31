@@ -1,4 +1,5 @@
-# Projeto Urgências e Internamentos
+# Projeto Integrador - Sistema Integrado de Apoio à Gestão de Urgências Hospitalares
+
 
 Sistema de gestão de urgências hospitalares desenvolvido com Docker, PostgreSQL, Backend e Frontend Web.
 
