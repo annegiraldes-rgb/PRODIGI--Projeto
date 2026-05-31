@@ -1,0 +1,132 @@
+Estrutura do Projeto e Explicação dos Componentes
+O projeto está organizado da seguinte forma:
+projeto-urgencias/
+│
+├── docker-compose.yml
+├── Base de dados.sql
+├── dados_teste_10_pacientes_hospital_central.sql
+│
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   ├── seed.py
+│   └── Dockerfile
+│
+└── frontend/
+    ├── index.html
+    ├── 1-login.html
+    ├── api.js
+    ├── js/
+    ├── css/
+    ├── Dockerfile
+    └── nginx.conf
+Arquitetura Geral
+A aplicação é composta por 3 contentores Docker:
+Contentor 1 – Base de Dados PostgreSQL
+Responsável pelo armazenamento de toda a informação do sistema:
+•	Utilizadores
+•	Utentes
+•	Episódios de urgência
+•	Internamentos
+•	Triagens
+•	Hospitais
+•	Prioridades
+Este contentor é criado automaticamente através do ficheiro:
+docker-compose.yml
+Os dados são carregados através dos ficheiros:
+Base de dados.sql
+dados_teste_10_pacientes_hospital_central.sql
+________________________________________
+Contentor 2 – Backend (Servidor da Aplicação)
+Responsável pela lógica de negócio da aplicação:
+•	Autenticação dos utilizadores
+•	Gestão dos utentes
+•	Gestão dos episódios
+•	Gestão dos internamentos
+•	Comunicação com a base de dados
+•	Disponibilização da API para o frontend
+Ficheiros principais:
+server.js
+Servidor principal da aplicação.
+Responsável por:
+•	Criar a API REST
+•	Receber pedidos do frontend
+•	Consultar e atualizar a base de dados
+•	Devolver informação ao utilizador
+package.json
+Lista todas as dependências Node.js utilizadas pelo backend.
+Exemplos:
+•	Express
+•	PostgreSQL
+•	Bibliotecas auxiliares
+seed.py
+Script utilizado para criar dados iniciais na aplicação.
+Exemplos:
+•	Utilizador administrador
+•	Médico
+•	Enfermeiro
+•	Dados de teste
+Dockerfile
+Define como o contentor do backend é construído.
+Inclui:
+•	Instalação das dependências
+•	Configuração do ambiente Node.js
+•	Arranque do servidor
+________________________________________
+Contentor 3 – Frontend (Interface do Utilizador)
+Responsável por toda a interface gráfica apresentada ao utilizador.
+Permite:
+•	Fazer login
+•	Consultar utentes
+•	Gerir episódios
+•	Gerir internamentos
+•	Visualizar prioridades
+•	Interagir com o sistema
+Ficheiros principais:
+index.html
+Página principal da aplicação.
+1-login.html
+Página de autenticação dos utilizadores.
+api.js
+Responsável pela comunicação entre o frontend e o backend.
+Exemplos:
+•	Login
+•	Consulta de utentes
+•	Consulta de episódios
+•	Atualização de dados
+pasta js/
+Contém toda a lógica JavaScript da aplicação.
+Exemplos:
+•	Eventos dos botões
+•	Atualização dinâmica das páginas
+•	Validações
+pasta css/
+Contém os estilos visuais da aplicação.
+Exemplos:
+•	Cores
+•	Tabelas
+•	Layout
+•	Responsividade
+nginx.conf
+Configuração do servidor Nginx utilizado para servir o frontend.
+Dockerfile
+Define como o contentor do frontend é construído e executado.
+________________________________________
+Resumo da Comunicação entre os Contentores
+Utilizador
+     │
+     ▼
+Frontend (Contentor 3)
+     │
+     ▼
+Backend/API (Contentor 2)
+     │
+     ▼
+PostgreSQL (Contentor 1)
+Fluxo de funcionamento:
+1.	O utilizador interage com o Frontend.
+2.	O Frontend envia pedidos ao Backend.
+3.	O Backend processa a lógica da aplicação.
+4.	O Backend consulta ou atualiza a Base de Dados.
+5.	A informação regressa ao Frontend.
+6.	O Frontend apresenta os resultados ao utilizador.
