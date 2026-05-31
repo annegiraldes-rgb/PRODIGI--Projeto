@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Gestão Hospitalar</title>
+    <link rel="stylesheet" href="css/01-login.css">
+  <link rel="stylesheet" href="css/02-dashboard-sidebar.css">
+  <link rel="stylesheet" href="css/03-internal-layout.css">
+  <link rel="stylesheet" href="css/04-ajustes-finais.css">
+  <link rel="stylesheet" href="css/05-v3-layouts.css">  
+</head>
+
+<body class="login-body">
+
+<div class="login-container">
+
+    <div class="login-left">
+        <div class="overlay">
+            <h3>Sistema Integrado de Gestão Hospitalar</h3>
+            <p>Eficiência, segurança e qualidade no cuidado ao paciente.</p>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-card">
+
+            <div class="logo">+</div>
+
+            <h1>Bem-vindo(a)</h1>
+            <p class="subtitle">Inicie sessão para aceder ao sistema</p>
+
+            <form id="loginForm">
+
+                <div class="form-group">
+                    <label for="username">Nome de utilizador</label>
+                    <input type="text" id="username" name="username" autocomplete="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Palavra-passe</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+
+                <p id="loginErro" style="color:red;"></p>
+
+                <button type="submit" class="login-btn">
+                    Iniciar sessão
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ⚠️ SÓ ESTE SCRIPT -->
+<script src="auth.js"></script>
+
+</body>
+</html>

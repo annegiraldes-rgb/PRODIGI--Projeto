@@ -1,0 +1,317 @@
+# Manual de Instruções — Projeto Urgências e Internamentos
+
+
+1. Instalar o Docker Desktop.
+2. Descompactar o projeto.
+3. Executar: docker compose up --build
+4. Importar a base de dados:
+   docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "Base de dados.sql"
+5. (Opcional) Importar dados de teste:
+   docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "dados_teste_10_pacientes_hospital_central.sql"
+6. Abrir http://localhost:8080
+7. Iniciar sessão com:
+   admin / 1234
+
+## 1. Requisitos necessários
+
+Antes de iniciar o projeto, é necessário ter instalado no computador:
+
+* Docker Desktop
+* Um navegador, por exemplo Google Chrome, Edge ou Firefox
+* O ficheiro do projeto descompactado
+
+Não é necessário instalar:
+
+* Python
+* Node.js
+* PostgreSQL
+* npm
+
+Estas dependências são executadas dentro dos contentores Docker.
+
+---
+
+## 2. Preparar o projeto
+
+1. Descompactar o ficheiro ZIP do projeto.
+2. Abrir a pasta:
+
+```bash
+projeto-urgencias
+```
+
+3. Confirmar que dentro da pasta existe o ficheiro:
+
+```bash
+docker-compose.yml
+```
+
+---
+
+## 3. Iniciar o projeto
+
+Abrir o terminal dentro da pasta `projeto-urgencias` e executar:
+
+```bash
+docker compose up --build
+```
+
+Em alguns computadores, o comando pode ser:
+
+```bash
+docker-compose up --build
+```
+
+Este comando vai iniciar:
+
+* Base de dados PostgreSQL
+* Backend
+* Frontend
+
+Aguardar até todos os contentores estarem ativos.
+
+---
+
+## 3.1 Importar a Base de Dados
+
+Após iniciar os contentores pela primeira vez, é necessário importar a base de dados incluída no projeto.
+
+Abrir uma nova janela do terminal e executar:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "Base de dados.sql"
+```
+
+Para carregar também os dados de teste:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "dados_teste_10_pacientes_hospital_central.sql"
+```
+
+Após a importação concluir sem erros, a aplicação estará pronta para utilização.
+
+---
+
+## 4. Abrir a aplicação
+
+Depois do Docker terminar o arranque, abrir no navegador:
+
+```text
+http://localhost:8080
+```
+
+A aplicação deverá abrir no ecrã de login.
+
+---
+
+## 5. Dados de acesso
+
+Todos os utilizadores de teste usam a password:
+
+```text
+1234
+```
+
+Utilizadores disponíveis:
+
+```text
+admin
+administrativo
+medico
+enfermeiro
+```
+
+Exemplo:
+
+```text
+Utilizador: admin
+Password: 1234
+```
+
+---
+
+## 6. Testar se o backend está a funcionar
+
+No navegador, abrir:
+
+```text
+http://localhost:8080/api/health
+```
+
+Se estiver tudo correto, deverá aparecer uma resposta em formato JSON.
+
+Também podem ser testados os seguintes endpoints:
+
+```text
+http://localhost:8080/api/utentes
+http://localhost:8080/api/hospitais
+http://localhost:8080/api/episodios
+```
+
+---
+
+## 7. Acesso à Base de Dados
+
+Caso seja necessário consultar diretamente a base de dados através de ferramentas como pgAdmin ou DBeaver:
+
+```text
+Host: localhost
+Porta: 5433
+Base de dados: hospital_urgencias
+Utilizador: postgres
+Password: postgres
+```
+
+---
+
+## 8. Parar o projeto
+
+Para parar o projeto:
+
+```text
+CTRL + C
+```
+
+Depois executar:
+
+```bash
+docker compose down
+```
+
+---
+
+## 9. Reiniciar a base de dados do zero
+
+Caso seja necessário apagar todos os dados:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Depois repetir a importação:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "Base de dados.sql"
+```
+
+Opcionalmente:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "dados_teste_10_pacientes_hospital_central.sql"
+```
+
+Atenção: este procedimento elimina todos os dados existentes.
+
+---
+
+## 10. Portas usadas pelo projeto
+
+```text
+Frontend: http://localhost:8080
+Backend/API: http://localhost:8080/api
+Base de dados PostgreSQL: localhost:5433
+```
+
+---
+
+## 11. Problemas comuns
+
+### O site não abre
+
+Confirmar se o Docker Desktop está aberto e se o comando foi executado na pasta correta.
+
+### A porta 8080 já está ocupada
+
+Pode existir outro programa a utilizar a porta 8080. Nesse caso, deve ser encerrado ou alterada a configuração da porta.
+
+### A base de dados está vazia
+
+Executar novamente os comandos de importação:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "Base de dados.sql"
+```
+
+e
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "dados_teste_10_pacientes_hospital_central.sql"
+```
+
+### O login não funciona
+
+Confirmar que está a utilizar um dos utilizadores de teste e a password:
+
+```text
+1234
+```
+
+---
+
+## 12. Estrutura do projeto
+
+```text
+projeto-urgencias/
+│
+├── docker-compose.yml
+├── Base de dados.sql
+├── dados_teste_10_pacientes_hospital_central.sql
+│
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   ├── seed.py
+│   └── Dockerfile
+│
+└── frontend/
+    ├── index.html
+    ├── 1-login.html
+    ├── api.js
+    ├── js/
+    ├── css/
+    ├── Dockerfile
+    └── nginx.conf
+```
+
+---
+
+## 13. Resumo Final
+
+Para colocar o projeto a funcionar:
+
+1. Instalar o Docker Desktop.
+2. Descompactar o projeto.
+3. Abrir um terminal na pasta do projeto.
+4. Executar:
+
+```bash
+docker compose up --build
+```
+
+5. Importar a base de dados:
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "Base de dados.sql"
+```
+
+6. Importar os dados de teste (opcional):
+
+```bash
+docker exec -i urgencias_db psql -U postgres -d hospital_urgencias < "dados_teste_10_pacientes_hospital_central.sql"
+```
+
+7. Abrir no navegador:
+
+```text
+http://localhost:8080
+```
+
+8. Iniciar sessão com:
+
+```text
+Utilizador: admin
+Password: 1234
+```
+
+O projeto ficará pronto para utilização.

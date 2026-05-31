@@ -1,0 +1,8 @@
+/* ajustes funcionais finais */
+.hospital-static{opacity:1;cursor:not-allowed;background:#f8fbff!important;color:#0b1b4d!important}
+.internal-page .dashboard-topbar,.internal-page .sidebar,.internal-page .page-content,.internal-page input,.internal-page select,.internal-page textarea,.internal-page button,.internal-page table{font-size:14px}
+.hidden{display:none!important}
+.admissao-grid{grid-template-columns:repeat(2,minmax(220px,1fr)) 1fr;align-items:end}.admissao-grid .success-message{grid-column:3;grid-row:1 / span 2}.admissao-grid button{justify-self:start}.admissao-panel{min-height:300px}
+@media(max-width:1200px){.admissao-grid{grid-template-columns:1fr}.admissao-grid .success-message{grid-column:auto;grid-row:auto}}
+
+

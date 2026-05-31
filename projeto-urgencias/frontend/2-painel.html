@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <link rel="stylesheet" href="css/01-login.css">
+  <link rel="stylesheet" href="css/02-dashboard-sidebar.css">
+  <link rel="stylesheet" href="css/03-internal-layout.css">
+  <link rel="stylesheet" href="css/04-ajustes-finais.css">
+  <link rel="stylesheet" href="css/05-v3-layouts.css">
+</head>
+
+<body class="dashboard-body">
+
+<header class="dashboard-topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">+</div>
+    <h1></h1>
+  </div>
+
+  <div class="topbar-center">
+    <label>Hospital / Unidade:</label>
+    <select id="hospitalSelect">
+      <option>Hospital Central</option>
+    </select>
+  </div>
+
+  <div class="topbar-user" onclick="toggleMenu()">
+    <div class="user-avatar">👤</div>
+    <div>
+      <strong id="nomeUtilizador">Utilizador</strong>
+      <span id="perfilUtilizador">Perfil</span>
+    </div>
+
+    <div class="dropdown-menu" id="userMenu">
+      <button onclick="terminarSessao()">🚪 Terminar sessão</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-title"></div>
+
+    <a href="2-painel.html" class="active">🏠 Painel de Urgências</a>
+    <a href="3-tempo-espera.html">⏱ Tempos de espera <span>24h</span></a>
+    <a href="4-utentes.html">👥 Utentes</a>
+    <a href="5-informacao-utente.html">📋 Informação utente</a>
+    <a href="5-historico-utentes.html">🕘 Histórico utente</a>
+
+    <div class="sidebar-separator"></div>
+
+    <a href="6-admissao.html">📝 Admissão Urgência</a>
+    <a href="7-aguardar-triagem.html">⏳ Aguardar Triagem</a>
+    <a href="8-triagem.html">🩺 Triagem</a>
+
+    <div class="sidebar-separator"></div>
+
+    <a href="9-consultas.html">⏳ Aguardar consulta</a>
+    <a href="10-consulta.html">👨‍⚕️ Consulta</a>
+
+    <div class="sidebar-separator"></div>
+
+    <a href="11-exames.html">🧪 Exames</a>
+    <a href="12-prescricoes.html">💊 Prescrições</a>
+    <a href="13-internamentos.html">🛏 Internamentos</a>
+
+    <div class="sidebar-separator"></div>
+
+    <a href="14-relatorios.html">📊 Relatórios</a>
+    <a href="15-profissionais.html">👨‍⚕️ Profissionais</a>
+    <a href="16-hospitais.html">🏥 Hospitais</a>
+  </aside>
+
+  <main class="dashboard-main page-content">
+
+    <section class="dashboard-title">
+      <div>
+        <h2>Resumo da Urgência</h2>
+        <p>Atividade do serviço de urgência nas últimas 24 horas.</p>
+      </div>
+
+      <div class="dashboard-actions">
+        <button onclick="carregarPainel()">↻ Atualizar</button>
+        <select>
+          <option>Últimas 24 horas</option>
+          <option>Hoje</option>
+          <option>Últimos 7 dias</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon blue">👥</div>
+        <div>
+          <p>Utentes atendidos</p>
+          <h3 id="kpiUtentes">0</h3>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon green">📅</div>
+        <div>
+          <p>Consultas realizadas</p>
+          <h3 id="kpiConsultas">0</h3>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon yellow">🕒</div>
+        <div>
+          <p>Aguardam consulta</p>
+          <h3 id="kpiAguardamConsulta">0</h3>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon red">🚑</div>
+        <div>
+          <p>Entradas por emergência</p>
+          <h3 id="kpiEmergencias">0</h3>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon purple">🛏️</div>
+        <div>
+          <p>Internamentos</p>
+          <h3 id="kpiInternamentos">0</h3>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon gray">🚪</div>
+        <div>
+          <p>Episódios encerrados</p>
+          <h3 id="kpiEncerrados">0</h3>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+
+      <div class="panel-card">
+        <h3>Utentes por triagem</h3>
+
+        <div class="triagem-box">
+          <div class="donut-chart"></div>
+
+          <ul class="legend-list" id="listaTriagem">
+            <li>A carregar...</li>
+          </ul>
+        </div>
+      </div>
+
+
+      <div class="panel-card">
+        <h3>Tempo médio de espera</h3>
+
+        <div class="tempo-principal">01h 12m</div>
+        <p class="tempo-label">Tempo médio geral</p>
+
+        <ul class="tempo-lista">
+          <li><span><i class="dot vermelho"></i> Vermelho</span><strong>00h 05m</strong></li>
+          <li><span><i class="dot laranja"></i> Laranja</span><strong>00h 15m</strong></li>
+          <li><span><i class="dot amarelo"></i> Amarelo</span><strong>00h 45m</strong></li>
+          <li><span><i class="dot verde"></i> Verde</span><strong>01h 35m</strong></li>
+          <li><span><i class="dot azul"></i> Azul</span><strong>02h 10m</strong></li>
+        </ul>
+      </div>
+
+      <div class="panel-card">
+        <h3>Aguardam consulta por prioridade</h3>
+
+        <ul class="prioridade-lista" id="listaPrioridades">
+          <li>A carregar...</li>
+        </ul>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-head">
+          <h3>Últimos episódios registados</h3>
+          <a href="4-utentes.html">Ver todos</a>
+        </div>
+
+        <table class="dashboard-table">
+          <thead>
+            <tr>
+              <th>Nº Episódio</th>
+              <th>Utente</th>
+              <th>Triagem</th>
+              <th>Hora da entrada</th>
+            </tr>
+          </thead>
+          <tbody id="ultimosEpisodios">
+            <tr><td colspan="4">A carregar...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-head">
+          <h3>Alertas e notificações</h3>
+          <a href="3-tempo-espera.html">Ver todos</a>
+        </div>
+
+        <div id="alertasPainel">
+          <div class="alert-box info">
+            ℹ️ <div><strong>A carregar alertas...</strong><br>Aguarde.</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer class="dashboard-footer">
+      <span>ℹ️ Os dados apresentados referem-se às últimas 24 horas.</span>
+      <span id="ultimaAtualizacao">🕒 Última atualização: —</span>
+    </footer>
+
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="auth.js"></script>
+
+<script src="js/2-painel.js"></script>
+
+</body>
+</html>
