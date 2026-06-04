@@ -64,7 +64,7 @@ async function carregar(){
         'estado'
       ],
       dados,
-      e=>`<a class="btn" href="10-consulta.html?id=${e.id}&origem=aguardar-consulta">Admitir para consulta</a>`
+      e=>`<a class="btn" href="10-consulta.html?id=${e.id}&origem=aguardar-consulta">Admitir para consulta</a> <button class="btn secondary" onclick="pacienteNaoApareceu(${e.id})">Paciente não apareceu</button>`
     );
 
     if(dados[0]){
@@ -72,6 +72,23 @@ async function carregar(){
     }else{
       detalhe.innerHTML='Sem utentes em espera.';
     }
+  }catch(e){
+    conteudo.innerHTML+=mensagemErro(e);
+  }
+}
+
+
+async function pacienteNaoApareceu(id){
+  if(!confirm('Confirmar que o paciente não apareceu e encerrar o episódio?')) return;
+  try{
+    const u=obterUser()||{};
+    await apiPut(`/episodios/${id}/encerrar`,{
+      data_hora_alta: hojeLocal(),
+      motivo_alta: 'Paciente não apareceu',
+      observacoes: 'Paciente chamado para consulta e não compareceu.',
+      profissional_id: u.id || 1
+    });
+    await carregar();
   }catch(e){
     conteudo.innerHTML+=mensagemErro(e);
   }
