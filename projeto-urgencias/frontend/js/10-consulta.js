@@ -1,98 +1,42 @@
-inicializarPagina('Aguardar consulta','LISTA DE UTENTES');
+inicializarPagina('Consulta','CONSULTA');
 
-conteudo.innerHTML=`<section class="page-header"><div><h2>Consultas</h2><p>Lista de utentes aguardando ou em consulta.</p></div><div class="page-actions"><input id="pesquisa" class="search-input" placeholder="Pesquisar utente..."><button onclick="carregar()">↻ Atualizar</button></div></section>${filtrosPrioridadeHTML(0)}<div class="grid-2"><section class="panel"><table id="tabela"></table></section><aside><div class="side-card" id="detalhe">Selecione um utente.</div></aside></div>`;
-
-function especialidadeDoEpisodio(atos, episodioId){
-  const a=[...atos].reverse().find(x=>Number(x.episodio_urgencia_id)===Number(episodioId) && String(x.tipo||'').toLowerCase().includes('nova consulta'));
-  return a?String(a.descricao||'').replace('Nova consulta - ',''):'—';
-}
-
-function ordemPrioridade(p){
-  const n=prioridadeNome(p).toLowerCase();
-  if(n.includes('vermelho'))return 1;
-  if(n.includes('laranja'))return 2;
-  if(n.includes('amarelo'))return 3;
-  if(n.includes('verde'))return 4;
-  if(n.includes('azul'))return 5;
-  return 99;
-}
-
-function dataMs(v){
-  const d=new Date(v);
-  return isNaN(d.getTime())?0:d.getTime();
-}
-
-async function carregar(){
-  try{
-    const ep=filtrarHospital(await apiGet('/episodios'));
-    const tri=filtrarHospital(await apiGet('/triagens'));
-    const atos=filtrarHospital(await apiGet('/atos'));
-
-    let dados=ep.filter(e=>
-      (e.estado||'').toLowerCase().includes('consulta') ||
-      (e.estado||'').toLowerCase().includes('aguardar')
-    );
-
-    const q=(pesquisa.value||'').toLowerCase();
-    if(q){
-      dados=dados.filter(e=>
-        String(e.utente).toLowerCase().includes(q) ||
-        especialidadeDoEpisodio(atos,e.id).toLowerCase().includes(q)
-      );
-    }
-
-    dados=dados.sort((a,b)=>{
-      const ta=tri.find(x=>Number(x.episodio_urgencia_id)===Number(a.id))||{};
-      const tb=tri.find(x=>Number(x.episodio_urgencia_id)===Number(b.id))||{};
-      const op=ordemPrioridade(ta.prioridade)-ordemPrioridade(tb.prioridade);
-      if(op!==0)return op;
-      return dataMs(a.data_entrada)-dataMs(b.data_entrada);
-    });
-
-    mostrarTabela(
-      'tabela',
-      ['Nº Episódio','Utente','Especialidade','Prioridade','Hora Triagem','Estado'],
-      [
-        e=>`EPI${String(e.id).padStart(8,'0')}`,
-        'utente',
-        e=>especialidadeDoEpisodio(atos,e.id),
-        e=>{
-          const t=tri.find(x=>Number(x.episodio_urgencia_id)===Number(e.id))||{};
-          return `<span class="badge ${prioridadeClasse(t.prioridade)}">${prioridadeNome(t.prioridade)}</span>`;
-        },
-        e=>hora((tri.find(x=>Number(x.episodio_urgencia_id)===Number(e.id))||{}).data_hora),
-        'estado'
-      ],
-      dados,
-      e=>`<a class="btn" href="10-consulta.html?id=${e.id}&origem=aguardar-consulta">Admitir para consulta</a> <button class="btn secondary" onclick="pacienteNaoApareceu(${e.id})">Paciente não apareceu</button>`
-    );
-
-    if(dados[0]){
-      detalhe.innerHTML=`<h2>${dados[0].utente}</h2><p>ID: UTE${String(dados[0].utente_id||dados[0].id).padStart(6,'0')}</p><p><strong>Especialidade:</strong> ${especialidadeDoEpisodio(atos,dados[0].id)}</p><hr><a class="btn secondary" href="5-historico-utentes.html?id=${dados[0].utente_id||''}">Ver histórico do utente</a>`;
-    }else{
-      detalhe.innerHTML='Sem utentes em espera.';
-    }
-  }catch(e){
-    conteudo.innerHTML+=mensagemErro(e);
-  }
-}
-
-
-async function pacienteNaoApareceu(id){
-  if(!confirm('Confirmar que o paciente não apareceu e encerrar o episódio?')) return;
-  try{
-    const u=obterUser()||{};
-    await apiPut(`/episodios/${id}/encerrar`,{
-      data_hora_alta: hojeLocal(),
-      motivo_alta: 'Paciente não apareceu',
-      observacoes: 'Paciente chamado para consulta e não compareceu.',
-      profissional_id: u.id || 1
-    });
-    await carregar();
-  }catch(e){
-    conteudo.innerHTML+=mensagemErro(e);
-  }
-}
-
+conteudo.innerHTML=`<a href="9-consultas.html" class="btn secondary" style="margin-bottom:18px">‹ Voltar à lista</a>
+<div class="consulta-layout">
+  <div>
+    <section class="panel"><h2>DETALHE DO EPISÓDIO</h2><div class="detail-grid" id="detalheEp"></div><div id="avisoConsulta"></div></section>
+    <section class="panel bloqueavel"><h2>REGISTAR CONSULTA</h2>
+      <form id="formConsulta" class="form-grid">
+        <div class="field"><label>Tipo de consulta</label><select id="tipo"><option>Consulta médica</option><option>Reavaliação</option></select></div>
+        <div class="field"><label>Data / Hora da consulta</label><input type="datetime-local" id="data"></div>
+        <div class="field full"><label>Queixa principal</label><textarea id="queixa" placeholder="Descreva a queixa principal do utente..."></textarea></div>
+        <div class="field full"><label>História da doença atual</label><textarea id="historia" placeholder="Descreva a história da doença atual..."></textarea></div>
+        <div class="field full"><label>Exame objetivo</label><textarea id="exame" placeholder="Descreva o exame objetivo..."></textarea></div>
+        <div class="field"><label>Sinais vitais</label><input id="sinais" placeholder="PA, FC, FR, Temp., SpO2, etc."></div>
+        <div class="field"><label>Observações</label><input id="obs" placeholder="Observações adicionais..."></div>
+        <div class="field full"><label>Hipótese diagnóstica</label><textarea id="diagnostico" placeholder="Descreva a hipótese diagnóstica..."></textarea></div>
+        <div class="field full"><label>Conduta / Plano</label><textarea id="plano" placeholder="Descreva a conduta e o plano terapêutico..."></textarea></div>
+        <button type="submit">Registar consulta</button>
+      </form><p id="resultado" class="resultado"></p>
+    </section>
+    <section class="panel bloqueavel"><h2>AÇÕES DISPONÍVEIS</h2><div class="clinical-actions">
+      <div class="clinical-action-card green"><div class="clinical-action"><div><strong>📅 Prescrever nova consulta</strong><small>Escolher especialidade e enviar para aguardar consulta.</small></div><button class="success" onclick="mostrarAcao('acaoConsulta')">Nova consulta</button></div><div id="acaoConsulta" class="action-inline-form" style="display:none"><label>Especialidade</label><select id="especialidadeConsulta"><option>Medicina Interna</option><option>Cardiologia</option><option>Ortopedia</option><option>Pediatria</option><option>Cirurgia Geral</option><option>Neurologia</option></select><div class="table-actions"><button class="secondary" onclick="fecharAcao('acaoConsulta')">Cancelar</button><button class="success" onclick="submeterNovaConsulta()">Submeter</button></div></div></div>
+      <div class="clinical-action-card blue"><div class="clinical-action"><div><strong>🧪 Prescrever exame</strong><small>Solicitar exames complementares de diagnóstico.</small></div><button onclick="mostrarAcao('acaoExame')">Prescrever exame</button></div><div id="acaoExame" class="action-inline-form" style="display:none"><label>Exame</label><select id="tipoExame"><option>Análises clínicas</option><option>Raio-X</option><option>TAC</option><option>Ecografia</option><option>Eletrocardiograma</option><option>Ressonância magnética</option></select><div class="table-actions"><button class="secondary" onclick="fecharAcao('acaoExame')">Cancelar</button><button onclick="submeterExame()">Submeter</button></div></div></div>
+      <div class="clinical-action-card yellow"><div class="clinical-action"><div><strong>💊 Nova prescrição</strong><small>Prescrever medicação ou outros tratamentos.</small></div><button style="background:#facc15;color:#0b1b4d" onclick="mostrarAcao('acaoPrescricao')">Nova prescrição</button></div><div id="acaoPrescricao" class="action-inline-form" style="display:none"><label>Prescrição</label><select id="descricaoPrescricao"><option>Paracetamol 500mg</option><option>Ibuprofeno 400mg</option><option>Amoxicilina 500mg</option><option>Omeprazol 20mg</option><option>Soro fisiológico</option><option>Outro tratamento</option></select><label>Dose</label><input id="dosePrescricao" placeholder="Ex: 1 comprimido"><label>Frequência</label><input id="freqPrescricao" placeholder="Ex: 8/8h"><label>Via</label><select id="viaPrescricao"><option>Oral</option><option>Intravenosa</option><option>Intramuscular</option><option>Tópica</option><option>Inalatória</option></select><label>Observações</label><textarea id="obsPrescricao" placeholder="Observações da prescrição..."></textarea><div class="table-actions"><button class="secondary" onclick="fecharAcao('acaoPrescricao')">Cancelar</button><button style="background:#facc15;color:#0b1b4d" onclick="submeterPrescricao()">Submeter</button></div></div></div>
+      <div class="clinical-action-card purple"><div class="clinical-action"><div><strong>🛏 Internamento</strong><small>Criar pedido de internamento para o utente.</small></div><button style="background:#9333ea" onclick="mostrarAcao('acaoInternamento')">Internar utente</button></div><div id="acaoInternamento" class="action-inline-form" style="display:none"><label>Serviço / especialidade</label><select id="servicoInternamento"><option>Medicina Interna</option><option>Cardiologia</option><option>Ortopedia</option><option>Cirurgia Geral</option><option>Neurologia</option></select><label>Observações</label><textarea id="obsInternamento" placeholder="Observações do pedido..."></textarea><div class="table-actions"><button class="secondary" onclick="fecharAcao('acaoInternamento')">Cancelar</button><button style="background:#9333ea" onclick="submeterInternamento()">Submeter</button></div></div></div>
+      <div class="clinical-action-card red"><div class="clinical-action"><div><strong>🚪 Encerrar episódio</strong><small>Encerrar o episódio de urgência.</small></div><button class="danger" onclick="mostrarAcao('acaoEncerrar')">Encerrar episódio</button></div><div id="acaoEncerrar" class="action-inline-form" style="display:none"><label>Observações importantes</label><textarea id="obsEncerramento" placeholder="Informações importantes do episódio..."></textarea><label>Motivo de alta</label><select id="motivoAlta"><option>Alta clínica</option><option>Alta a pedido do utente</option><option>Transferência</option><option>Abandono</option><option>Óbito</option></select><div class="table-actions"><button class="secondary" onclick="fecharAcao('acaoEncerrar')">Cancelar</button><button class="danger" onclick="encerrarEpisodio()">Encerrar episódio</button></div></div></div>
+    </div></section>
+    <section class="panel bloqueavel"><h2>REGISTOS REALIZADOS</h2><table><thead><tr><th>Data / Hora</th><th>Tipo</th><th>Descrição</th><th>Profissional</th></tr></thead><tbody id="registos"><tr><td colspan="4">Sem registos.</td></tr></tbody></table></section>
+  </div>
+  <aside class="timeline-modern bloqueavel"><h2>LINHA TEMPORAL DO EPISÓDIO</h2><div id="timelineConsulta"></div></aside>
+</div>`;
+let episodioAtual=null;
+function bloquearConsulta(bloquear){document.querySelectorAll('.bloqueavel input,.bloqueavel textarea,.bloqueavel select,.bloqueavel button,.bloqueavel a.btn').forEach(el=>{el.disabled=bloquear;if(bloquear&&el.tagName==='A')el.style.pointerEvents='none';});document.querySelectorAll('.bloqueavel').forEach(el=>el.style.opacity=bloquear?'0.55':'1')}
+function mostrarAcao(id){if(!episodioAtual)return;['acaoConsulta','acaoExame','acaoPrescricao','acaoInternamento','acaoEncerrar'].forEach(x=>{const el=document.getElementById(x);if(el)el.style.display=(x===id&&el.style.display==='none')?'grid':'none';});}function fecharAcao(id){const el=document.getElementById(id);if(el)el.style.display='none'}
+async function carregar(){try{const params=new URLSearchParams(location.search);const id=params.get('id');data.value=hojeLocal();if(!id){episodioAtual=null;detalheEp.innerHTML=`<div class="detail-box"><strong>Episódio:</strong> —</div><div class="detail-box"><strong>Utente:</strong> —</div><div class="detail-box"><strong>Hospital:</strong> —</div><div class="detail-box"><strong>Entrada:</strong> —</div><div class="detail-box"><strong>Estado:</strong> —</div><div class="detail-box"><strong>Prioridade:</strong> —</div>`;avisoConsulta.innerHTML='<div class="info-box">Selecione um utente na lista de aguardar consulta para ativar esta página.</div>';timelineConsulta.innerHTML='<div class="step"><div class="step-icon">—</div><div class="step-card"><strong>Sem paciente selecionado</strong><span>Os detalhes do episódio estão em branco.</span></div></div>';bloquearConsulta(true);return}const episodios=filtrarHospital(await apiGet('/episodios')),triagens=filtrarHospital(await apiGet('/triagens')),atos=filtrarHospital(await apiGet('/atos'));const ep=episodios.find(e=>String(e.id)===String(id));if(!ep){bloquearConsulta(true);avisoConsulta.innerHTML='<div class="info-box erro">Episódio não encontrado.</div>';return}episodioAtual=ep;const tr=triagens.find(t=>t.episodio_urgencia_id===ep.id)||{};detalheEp.innerHTML=`<div class="detail-box"><strong>Episódio #${valor(ep.id)}</strong></div><div class="detail-box"><strong>Utente:</strong> ${valor(ep.utente)}</div><div class="detail-box"><strong>Hospital:</strong> ${valor(ep.hospital)||'Hospital Central'}</div><div class="detail-box"><strong>Entrada:</strong> ${hora(ep.data_entrada)}</div><div class="detail-box"><strong>Estado:</strong> ${valor(ep.estado)}</div><div class="detail-box"><strong>Prioridade:</strong> ${dotPrioridade(tr.prioridade)} ${valor(tr.prioridade)}</div>`;avisoConsulta.innerHTML='';timelineConsulta.innerHTML=`<div class="step"><div class="step-icon green">✓</div><div class="step-card"><strong>Entrada no serviço de urgência</strong><span>${hora(ep.data_entrada)}</span></div></div><div class="step"><div class="step-icon red">!</div><div class="step-card"><strong>Triagem</strong><span>Prioridade: ${prioridadeNome(tr.prioridade)}</span></div></div><div class="step"><div class="step-icon blue">👤</div><div class="step-card active"><strong>Consulta</strong><span>${valor(ep.estado)}</span></div></div>`;registos.innerHTML=atos.filter(a=>a.episodio_urgencia_id===ep.id).map(a=>`<tr><td>${hora(a.data)}</td><td>${valor(a.tipo)}</td><td>${valor(a.descricao)}</td><td>${valor(a.profissionais)}</td></tr>`).join('')||'<tr><td colspan="4">Sem registos.</td></tr>';bloquearConsulta(false)}catch(e){conteudo.innerHTML+=mensagemErro(e)}}
+formConsulta.onsubmit=async e=>{e.preventDefault();if(!episodioAtual)return;try{await apiPost('/consultas',{episodio_urgencia_id:episodioAtual.id,profissional_id:1,tipo:tipo.value,data_hora:data.value,queixa:queixa.value,historia:historia.value,exame:exame.value,sinais:sinais.value,observacoes:obs.value,diagnostico:diagnostico.value,plano:plano.value});resultado.textContent='Consulta registada com sucesso.';carregar()}catch(err){resultado.textContent=err.message}};
+async function submeterNovaConsulta(){try{await apiPost('/atos',{episodio_urgencia_id:episodioAtual.id,profissional_id:1,tipo:'nova_consulta',descricao:'Nova consulta - '+especialidadeConsulta.value,estado:'pendente'});await apiPut('/episodios/'+episodioAtual.id+'/estado',{estado:'aguardar_consulta'});location.href='9-consultas.html'}catch(e){alert(e.message)}}
+async function submeterExame(){try{await apiPost('/atos',{episodio_urgencia_id:episodioAtual.id,profissional_id:1,tipo:tipoExame.value,descricao:tipoExame.value,estado:'pendente'});location.href='11-exames.html'}catch(e){alert(e.message)}}
+async function submeterPrescricao(){try{await apiPost('/prescricoes',{episodio_urgencia_id:episodioAtual.id,profissional_id:1,descricao:descricaoPrescricao.value,dose:dosePrescricao.value,frequencia:freqPrescricao.value,via:viaPrescricao.value,estado:'pendente',observacoes:obsPrescricao.value});location.href='12-prescricoes.html'}catch(e){alert(e.message)}}
+async function submeterInternamento(){try{await apiPost('/internamentos',{episodio_urgencia_id:episodioAtual.id,utente_id:episodioAtual.utente_id,hospital_id:episodioAtual.hospital_id||1,medico_responsavel:1,servico:servicoInternamento.value,estado:'internado',observacoes:obsInternamento.value});location.href='13-internamentos.html'}catch(e){alert(e.message)}}
+async function encerrarEpisodio(){if(!episodioAtual)return;try{await apiPut('/episodios/'+episodioAtual.id+'/encerrar',{observacoes:obsEncerramento.value,motivo_alta:motivoAlta.value});resultado.textContent='Episódio encerrado.';location.href='9-consultas.html'}catch(e){alert(e.message)}}
 carregar();
-
